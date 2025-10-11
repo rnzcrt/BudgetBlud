@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
 import '../providers/expense_provider.dart';
 import '../models/expense.dart';
 import 'settings_screen.dart';
@@ -22,6 +23,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? category;
   DateTime selectedDate = DateTime.now();
   bool isCategoryExpanded = false;
+  List<String> filteredCustomCategories = [];
+  bool showSuggestions = false;
 
   final List<String> categories = [
     'Foods',
@@ -46,26 +49,64 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       }
       selectedDate = widget.expense!.date;
     }
+
+    otherCategoryController.addListener(_onCustomCategoryChanged);
   }
 
   @override
   void dispose() {
     amountController.dispose();
     noteController.dispose();
+    otherCategoryController.removeListener(_onCustomCategoryChanged);
     otherCategoryController.dispose();
     super.dispose();
+  }
+
+  void _onCustomCategoryChanged() {
+    final query = otherCategoryController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        showSuggestions = false;
+        filteredCustomCategories = [];
+      });
+      return;
+    }
+
+    final expenseProvider = Provider.of<ExpenseProvider>(
+      context,
+      listen: false,
+    );
+    final allCustomCategories = expenseProvider.getCustomCategories();
+
+    final matches = allCustomCategories.where((cat) {
+      return cat.toLowerCase().startsWith(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      filteredCustomCategories = matches;
+      showSuggestions = matches.isNotEmpty;
+    });
+  }
+
+  String _normalizeCategory(String category) {
+    if (category.isEmpty) return category;
+    return category[0].toUpperCase() + category.substring(1).toLowerCase();
   }
 
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
       String clean = amountController.text.replaceAll(',', '').trim();
-      String finalCategory =
-          category == 'Others' && otherCategoryController.text.isNotEmpty
-          ? otherCategoryController.text
-          : category!;
+      String finalCategory;
 
+      if (category == 'Others' && otherCategoryController.text.isNotEmpty) {
+        finalCategory = _normalizeCategory(otherCategoryController.text.trim());
+      } else {
+        finalCategory = category!;
+      }
+
+      // FIX: Generate proper UUID instead of timestamp
       final expense = Expense(
-        id: widget.expense?.id ?? DateTime.now().toString(),
+        id: widget.expense?.id ?? const Uuid().v4(), // CHANGED THIS LINE
         title: noteController.text.isNotEmpty ? noteController.text : 'Expense',
         amount: double.parse(clean),
         category: finalCategory,
@@ -83,11 +124,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
+  // ... rest of your widget code remains the same ...
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Get first and last day of current month
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
@@ -199,7 +240,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Category Dropdown - Custom Implementation
+              // Category Dropdown
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -247,7 +288,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
 
-                  // Dropdown Menu
                   if (isCategoryExpanded)
                     Container(
                       margin: const EdgeInsets.only(top: 4),
@@ -306,7 +346,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ),
                     ),
 
-                  // Validation error display
                   if (category == null &&
                       _formKey.currentState?.validate() == false)
                     Padding(
@@ -319,39 +358,133 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ],
               ),
 
-              // Custom Category Field (if Others selected)
               if (category == 'Others') ...[
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: otherCategoryController,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Custom Category',
-                    labelStyle: TextStyle(
-                      color: isDarkMode
-                          ? Colors.white70
-                          : const Color(0xFF61738A),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: otherCategoryController,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Custom Category',
+                        labelStyle: TextStyle(
+                          color: isDarkMode
+                              ? Colors.white70
+                              : const Color(0xFF61738A),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode
+                            ? const Color(0xFF2C2C2C)
+                            : Colors.grey[200],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (category == 'Others' &&
+                            (value == null || value.isEmpty)) {
+                          return 'Enter custom category';
+                        }
+                        return null;
+                      },
                     ),
-                    filled: true,
-                    fillColor: isDarkMode
-                        ? const Color(0xFF2C2C2C)
-                        : Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (category == 'Others' &&
-                        (value == null || value.isEmpty)) {
-                      return 'Enter custom category';
-                    }
-                    return null;
-                  },
+
+                    if (showSuggestions && filteredCustomCategories.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        decoration: BoxDecoration(
+                          color: isDarkMode
+                              ? const Color(0xFF2C2C2C)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                              child: Text(
+                                'Suggestions:',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkMode
+                                      ? Colors.white60
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                            ...filteredCustomCategories.take(5).map((
+                              suggestion,
+                            ) {
+                              return InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    otherCategoryController.text = suggestion;
+                                    showSuggestions = false;
+                                  });
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border:
+                                        suggestion !=
+                                            filteredCustomCategories.last
+                                        ? Border(
+                                            bottom: BorderSide(
+                                              color: isDarkMode
+                                                  ? Colors.grey[800]!
+                                                  : Colors.grey[300]!,
+                                              width: 0.5,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.history,
+                                        size: 16,
+                                        color: isDarkMode
+                                            ? Colors.white60
+                                            : Colors.grey[600],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        suggestion,
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
 
@@ -493,7 +626,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (category == null) {
-                        setState(() {}); // Trigger validation display
+                        setState(() {});
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Please select a category'),
@@ -517,7 +650,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 200),
             ],
           ),
         ),
