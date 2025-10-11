@@ -24,17 +24,28 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final provider = Provider.of<ExpenseProvider>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    final customCategories = provider.expenses
+    // Get all unique categories from expenses
+    final allCategories = provider.expenses
         .map((e) => e.category)
-        .where((c) => !['Food', 'Transport', 'Shopping', 'Bills'].contains(c))
         .toSet()
         .toList();
 
-    List<String> categories = [
-      'Food',
-      'Transport',
+    // Define predefined categories (matching your budget provider)
+    final predefinedCategories = [
+      'Foods',
+      'Transportation',
       'Shopping',
       'Bills',
+    ];
+
+    // Get custom categories (anything not in predefined list)
+    final customCategories = allCategories
+        .where((c) => !predefinedCategories.contains(c))
+        .toList();
+
+    // Build category filter list
+    List<String> categories = [
+      ...predefinedCategories.where((c) => allCategories.contains(c)),
       if (customCategories.isNotEmpty) 'Others',
     ];
 
@@ -45,8 +56,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     List<Expense> filtered = provider.expenses.where((e) {
       bool matchesSearch =
-          e.note.toLowerCase().contains(search.toLowerCase()) ||
-          e.category.toLowerCase().contains(search.toLowerCase()) ||
+          (e.note?.toLowerCase() ?? '').contains(search.toLowerCase()) ||
+          (e.category?.toLowerCase() ?? '').contains(search.toLowerCase()) ||
           e.amount.toString().contains(search);
 
       bool matchesCategory = true;
@@ -173,137 +184,165 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: filtered.length,
-              itemBuilder: (_, i) {
-                final e = filtered[i];
-                return Dismissible(
-                  key: ValueKey(e),
-                  background: Container(
-                    color: Colors.green,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 20),
-                    child: const Icon(Icons.edit, color: Colors.white),
-                  ),
-                  secondaryBackground: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  confirmDismiss: (direction) async {
-                    if (direction == DismissDirection.endToStart) {
-                      return await showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          backgroundColor: isDarkMode
-                              ? const Color(0xFF2C2C2C)
-                              : Colors.white,
-                          title: Text(
-                            "Confirm Delete",
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          content: Text(
-                            "Are you sure you want to delete this transaction?",
-                            style: TextStyle(
-                              color: isDarkMode
-                                  ? Colors.white70
-                                  : Colors.black87,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text("Cancel"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text(
-                                "Delete",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AddTransactionScreen(expense: e),
-                        ),
-                      );
-                      return false;
-                    }
-                  },
-                  onDismissed: (direction) {
-                    if (direction == DismissDirection.endToStart) {
-                      provider.deleteExpense(e.id);
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? const Color(0xFF1E1E1E)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+            child: filtered.isEmpty
+                ? Center(
+                    child: Text(
+                      'No expenses found',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white60 : Colors.grey,
+                        fontSize: 16,
+                      ),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) {
+                      final e = filtered[i];
+                      final formattedAmount = NumberFormat(
+                        '#,##0.00',
+                      ).format(e.amount);
+
+                      return Dismissible(
+                        key: ValueKey(e.id),
+                        background: SizedBox.expand(
+                          child: Container(
+                            color: Colors.green,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            child: const Icon(Icons.edit, color: Colors.white),
+                          ),
+                        ),
+                        secondaryBackground: SizedBox.expand(
+                          child: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.endToStart) {
+                            return await showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                backgroundColor: isDarkMode
+                                    ? const Color(0xFF2C2C2C)
+                                    : Colors.white,
+                                title: Text(
+                                  "Confirm Delete",
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
+                                ),
+                                content: Text(
+                                  "Are you sure you want to delete this transaction?",
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white70
+                                        : Colors.black87,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text(
+                                      "Delete",
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    AddTransactionScreen(expense: e),
+                              ),
+                            );
+                            return false;
+                          }
+                        },
+                        onDismissed: (direction) {
+                          if (direction == DismissDirection.endToStart) {
+                            provider.deleteExpense(e.id);
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? const Color(0xFF2C2C2C)
-                                : Colors.grey.shade100,
+                                ? const Color(0xFF1E1E1E)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: _getCategoryIcon(e.category, isDarkMode),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(
-                                "₱${e.amount.toStringAsFixed(2)}",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
                                   color: isDarkMode
-                                      ? Colors.white
-                                      : Colors.black,
+                                      ? const Color(0xFF2C2C2C)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: _getCategoryIcon(e.category, isDarkMode),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "₱$formattedAmount",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    Text(
+                                      e.category,
+                                      style: const TextStyle(
+                                        color: Color(0xFF61738A),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Text(
-                                e.category,
-                                style: const TextStyle(
-                                  color: Color(0xFF2563EB),
+                                DateFormat('MMMM yyyy').format(e.date),
+                                style: TextStyle(
                                   fontSize: 14,
+                                  color: isDarkMode
+                                      ? Colors.white60
+                                      : Colors.black54,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Text(
-                          DateFormat('MMMM yyyy').format(e.date),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDarkMode ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -333,12 +372,28 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               title,
               style: TextStyle(
                 color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                fontSize: 13,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
             dropdownColor: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
-            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: 13,
+            ),
+            icon: Icon(
+              Icons.arrow_drop_down,
+              color: isDarkMode ? Colors.white70 : Colors.grey[600],
+            ),
+            alignment: AlignmentDirectional.centerStart,
+            menuMaxHeight: 300,
             items: items
-                .map((c) => DropdownMenuItem<String>(value: c, child: Text(c)))
+                .map(
+                  (c) => DropdownMenuItem<String>(
+                    value: c,
+                    child: Text(c, overflow: TextOverflow.ellipsis),
+                  ),
+                )
                 .toList(),
             onChanged: onChanged,
           ),
@@ -349,17 +404,21 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Icon _getCategoryIcon(String category, bool isDarkMode) {
     final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
-    switch (category) {
-      case 'Food':
+    // Match icons from overview_screen.dart
+    switch (category.toLowerCase()) {
+      case 'food':
+      case 'foods':
         return Icon(Icons.restaurant, color: iconColor);
-      case 'Transport':
-        return Icon(Icons.directions_bus, color: iconColor);
-      case 'Shopping':
+      case 'transportation':
+      case 'transport':
+        return Icon(Icons.directions_car, color: iconColor);
+      case 'shopping':
         return Icon(Icons.shopping_bag, color: iconColor);
-      case 'Bills':
-        return Icon(Icons.receipt, color: iconColor);
+      case 'bills':
+      case 'housing':
+        return Icon(Icons.receipt_long, color: iconColor);
       default:
-        return Icon(Icons.category, color: iconColor);
+        return Icon(Icons.attach_money, color: iconColor);
     }
   }
 }
