@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/budget_provider.dart';
 import 'category_limits_screen.dart';
+import 'main_navigation_screen.dart';
 
 class SetupScreen extends StatefulWidget {
   final bool isRenewal;
@@ -18,15 +19,53 @@ class _SetupScreenState extends State<SetupScreen> {
   int step = 1;
   final _formKey = GlobalKey<FormState>();
   final budgetController = TextEditingController();
-  bool _isProcessing = false; // Add loading state
+  bool _isProcessing = false;
+  bool _isChecking = true;
 
   @override
   void initState() {
     super.initState();
+
     // If renewal, skip directly to step 2
     if (widget.isRenewal) {
       step = 2;
     }
+
+    // FIXED: Schedule the check after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkExistingBudget();
+    });
+  }
+
+  /// Check if user already has a budget set up
+  Future<void> _checkExistingBudget() async {
+    final provider = Provider.of<BudgetProvider>(context, listen: false);
+
+    // Wait for provider to load
+    int attempts = 0;
+    while (!provider.isLoaded && attempts < 50) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      attempts++;
+    }
+
+    if (!mounted) return;
+
+    // If budget exists and this is not a renewal, skip to home
+    if (provider.totalBudget > 0 && !widget.isRenewal) {
+      debugPrint(
+        '✅ Budget already exists (₱${provider.totalBudget}), skipping setup',
+      );
+
+      // FIXED: Safe navigation after build is complete
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+      );
+      return;
+    }
+
+    setState(() {
+      _isChecking = false;
+    });
   }
 
   Future<void> _nextStep() async {
@@ -63,6 +102,8 @@ class _SetupScreenState extends State<SetupScreen> {
             throw Exception('Budget not set correctly');
           }
 
+          debugPrint('✅ Budget set successfully: ₱$budget');
+
           // Navigate only after budget is confirmed to be set
           Navigator.pushReplacement(
             context,
@@ -93,6 +134,28 @@ class _SetupScreenState extends State<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Show loading while checking existing budget
+    if (_isChecking) {
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF2563EB)),
+              SizedBox(height: 16),
+              Text(
+                'Loading...',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
@@ -169,7 +232,7 @@ class _SetupScreenState extends State<SetupScreen> {
                           Text(
                             widget.isRenewal
                                 ? "Set your budget for the new month"
-                                : "What's your monthly budget?",
+                                : "What's your budget for this month?",
                             style: TextStyle(
                               fontSize: 14,
                               color: isDarkMode
