@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/budget_provider.dart';
-import 'main_navigation_screen.dart'; // ← Change this import
+import 'category_limits_screen.dart';
 
 class SetupScreen extends StatefulWidget {
-  const SetupScreen({super.key});
+  final bool isRenewal;
+
+  const SetupScreen({super.key, this.isRenewal = false});
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -16,70 +18,181 @@ class _SetupScreenState extends State<SetupScreen> {
   int step = 1;
   final _formKey = GlobalKey<FormState>();
   final budgetController = TextEditingController();
+  bool _isProcessing = false; // Add loading state
 
-  void _nextStep() {
+  @override
+  void initState() {
+    super.initState();
+    // If renewal, skip directly to step 2
+    if (widget.isRenewal) {
+      step = 2;
+    }
+  }
+
+  Future<void> _nextStep() async {
+    // Prevent multiple clicks
+    if (_isProcessing) return;
+
     if (step == 1) {
       setState(() {
         step = 2;
       });
     } else if (step == 2) {
       if (_formKey.currentState!.validate()) {
-        double budget = double.parse(budgetController.text.replaceAll(",", ""));
-        Provider.of<BudgetProvider>(context, listen: false).setBudget(budget);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const MainNavigationScreen(),
-          ), // ← Change this line
-        );
+        setState(() {
+          _isProcessing = true;
+        });
+
+        try {
+          double budget = double.parse(
+            budgetController.text.replaceAll(",", ""),
+          );
+
+          final provider = Provider.of<BudgetProvider>(context, listen: false);
+
+          // Make sure to await the setBudget operation
+          await provider.setBudget(budget);
+
+          // Reload budget from SharedPreferences to ensure latest value
+          await provider.reloadBudget();
+
+          if (!mounted) return;
+
+          // Verify the budget was actually set
+          if (provider.totalBudget != budget) {
+            throw Exception('Budget not set correctly');
+          }
+
+          // Navigate only after budget is confirmed to be set
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryLimitsScreen(isRenewal: widget.isRenewal),
+            ),
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error setting budget: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Spacer(),
+              // Header Section
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.isRenewal ? "Monthly Renewal" : "Getting started",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode
+                          ? Colors.white
+                          : const Color(0xFF1E3A5F),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    step == 1
+                        ? "Let's get started!"
+                        : "Input your monthly budget",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDarkMode ? Colors.white60 : Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 80),
               Center(
                 child: step == 1
                     ? Column(
                         children: [
-                          const Text(
+                          Text(
                             "Welcome!\nLet's setup\nyour BudgetBlud",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 38,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B1C1E),
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : const Color(0xFF1E3A5F),
+                              height: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Image.asset("images/set1.png", height: 200),
+                          const SizedBox(height: 40),
+                          Image.asset("images/set1.png", height: 300),
                         ],
                       )
                     : Column(
                         children: [
-                          const Text(
-                            "Monthly Budget\nSetup",
+                          Text(
+                            widget.isRenewal
+                                ? "Renew Your\nMonthly Budget"
+                                : "Monthly Budget\nSetup",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B1C1E),
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : const Color(0xFF1E3A5F),
+                              height: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            "What's your monthly budget?",
-                            style: TextStyle(color: Colors.grey),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.isRenewal
+                                ? "Set your budget for the new month"
+                                : "What's your monthly budget?",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDarkMode
+                                  ? Colors.white60
+                                  : Colors.grey[400],
+                            ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
+                          // Budget Label
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Budget for this month:",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A5F),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           Form(
                             key: _formKey,
                             child: TextFormField(
@@ -110,14 +223,26 @@ class _SetupScreenState extends State<SetupScreen> {
                                   );
                                 }),
                               ],
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
                               decoration: InputDecoration(
-                                prefixIcon: const Padding(
-                                  padding: EdgeInsets.only(left: 12, right: 8),
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 16,
+                                    right: 8,
+                                    top: 1,
+                                  ),
                                   child: Text(
                                     "₱",
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
+                                      color: isDarkMode
+                                          ? Colors.white60
+                                          : Colors.grey[600],
                                     ),
                                   ),
                                 ),
@@ -125,13 +250,44 @@ class _SetupScreenState extends State<SetupScreen> {
                                   minWidth: 0,
                                   minHeight: 0,
                                 ),
-                                hintText: "24,500",
-                                hintStyle: const TextStyle(color: Colors.grey),
+                                hintText: "0",
+                                hintStyle: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.white38
+                                      : Colors.grey[600],
+                                  fontSize: 16,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: isDarkMode
+                                        ? Colors.grey[700]!
+                                        : Colors.grey[300]!,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: isDarkMode
+                                        ? Colors.grey[700]!
+                                        : Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF2563EB),
+                                    width: 2,
+                                  ),
                                 ),
                                 filled: true,
-                                fillColor: Colors.white,
+                                fillColor: isDarkMode
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -153,8 +309,8 @@ class _SetupScreenState extends State<SetupScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Image.asset("images/set2.png", height: 220),
+                          const SizedBox(height: 32),
+                          Image.asset("images/set2.png", height: 300),
                         ],
                       ),
               ),
@@ -164,26 +320,42 @@ class _SetupScreenState extends State<SetupScreen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 26),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _nextStep,
-                  child: Text(
-                    step == 1 ? "Next" : "Finish Setup",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  onPressed: _isProcessing ? null : _nextStep,
+                  child: _isProcessing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Next",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    budgetController.dispose();
+    super.dispose();
   }
 }
