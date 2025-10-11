@@ -14,6 +14,7 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
+      // Navigation
       'dashboard': 'Dashboard',
       'budget': 'Budget',
       'reports': 'Reports',
@@ -21,6 +22,8 @@ class AppLocalizations {
       'transactions': 'Transactions',
       'overview': 'Overview',
       'settings': 'Settings',
+
+      // Reports
       'spending_by_category': 'Spending by Category',
       'monthly_spending_trends': 'Monthly Spending Trends',
       'this_month': 'This Month',
@@ -32,8 +35,41 @@ class AppLocalizations {
       'spent': 'spent',
       'left': 'Left',
       'exceeded': 'Exceeded',
+
+      // Settings
+      'app_settings': 'App Settings',
+      'preferences': 'Preferences',
+      'language': 'Language',
+      'theme': 'Theme',
+      'dark_mode': 'Dark Mode',
+      'light_mode': 'Light Mode',
+      'data_management': 'Data Management',
+      'reset_app_data': 'Reset App Data',
+      'export_data': 'Export Data',
+      'about': 'About',
+      'version': 'Version',
+
+      // Categories
+      'foods': 'Foods',
+      'transportation': 'Transportation',
+      'shopping': 'Shopping',
+      'bills': 'Bills',
+
+      // Common
+      'cancel': 'Cancel',
+      'confirm': 'Confirm',
+      'save': 'Save',
+      'edit': 'Edit',
+      'delete': 'Delete',
+      'add': 'Add',
+      'next': 'Next',
+      'back': 'Back',
+      'done': 'Done',
+      'yes': 'Yes',
+      'no': 'No',
     },
     'tl': {
+      // Navigation
       'dashboard': 'Dashboard',
       'budget': 'Badyet',
       'reports': 'Mga Ulat',
@@ -41,6 +77,8 @@ class AppLocalizations {
       'transactions': 'Mga Transaksyon',
       'overview': 'Pangkalahatang-ideya',
       'settings': 'Mga Setting',
+
+      // Reports
       'spending_by_category': 'Paggastos ayon sa Kategorya',
       'monthly_spending_trends': 'Tuwing Buwan na Paggastos',
       'this_month': 'Ngayong Buwan',
@@ -52,8 +90,41 @@ class AppLocalizations {
       'spent': 'nagastos',
       'left': 'Natitira',
       'exceeded': 'Lumampas',
+
+      // Settings
+      'app_settings': 'Mga Setting ng App',
+      'preferences': 'Mga Kagustuhan',
+      'language': 'Wika',
+      'theme': 'Tema',
+      'dark_mode': 'Madilim na Mode',
+      'light_mode': 'Maliwanag na Mode',
+      'data_management': 'Pamamahala ng Data',
+      'reset_app_data': 'I-reset ang Data ng App',
+      'export_data': 'I-export ang Data',
+      'about': 'Tungkol',
+      'version': 'Bersyon',
+
+      // Categories
+      'foods': 'Pagkain',
+      'transportation': 'Transportasyon',
+      'shopping': 'Pamimili',
+      'bills': 'Mga Bayarin',
+
+      // Common
+      'cancel': 'Kanselahin',
+      'confirm': 'Kumpirmahin',
+      'save': 'I-save',
+      'edit': 'I-edit',
+      'delete': 'Tanggalin',
+      'add': 'Magdagdag',
+      'next': 'Susunod',
+      'back': 'Bumalik',
+      'done': 'Tapos na',
+      'yes': 'Oo',
+      'no': 'Hindi',
     },
     'es': {
+      // Navigation
       'dashboard': 'Panel',
       'budget': 'Presupuesto',
       'reports': 'Informes',
@@ -61,6 +132,8 @@ class AppLocalizations {
       'transactions': 'Transacciones',
       'overview': 'Resumen',
       'settings': 'Configuración',
+
+      // Reports
       'spending_by_category': 'Gastos por Categoría',
       'monthly_spending_trends': 'Tendencias Mensuales de Gastos',
       'this_month': 'Este Mes',
@@ -72,6 +145,38 @@ class AppLocalizations {
       'spent': 'gastado',
       'left': 'Restante',
       'exceeded': 'Excedido',
+
+      // Settings
+      'app_settings': 'Configuración de la App',
+      'preferences': 'Preferencias',
+      'language': 'Idioma',
+      'theme': 'Tema',
+      'dark_mode': 'Modo Oscuro',
+      'light_mode': 'Modo Claro',
+      'data_management': 'Gestión de Datos',
+      'reset_app_data': 'Restablecer Datos',
+      'export_data': 'Exportar Datos',
+      'about': 'Acerca de',
+      'version': 'Versión',
+
+      // Categories
+      'foods': 'Alimentos',
+      'transportation': 'Transporte',
+      'shopping': 'Compras',
+      'bills': 'Facturas',
+
+      // Common
+      'cancel': 'Cancelar',
+      'confirm': 'Confirmar',
+      'save': 'Guardar',
+      'edit': 'Editar',
+      'delete': 'Eliminar',
+      'add': 'Agregar',
+      'next': 'Siguiente',
+      'back': 'Atrás',
+      'done': 'Hecho',
+      'yes': 'Sí',
+      'no': 'No',
     },
   };
 
@@ -79,7 +184,7 @@ class AppLocalizations {
     return _localizedValues[locale.languageCode]?[key] ?? key;
   }
 
-  // Helper getters
+  // Helper getters - Navigation
   String get dashboard => translate('dashboard');
   String get budget => translate('budget');
   String get reports => translate('reports');
@@ -87,6 +192,8 @@ class AppLocalizations {
   String get transactions => translate('transactions');
   String get overview => translate('overview');
   String get settings => translate('settings');
+
+  // Reports
   String get spendingByCategory => translate('spending_by_category');
   String get monthlySpendingTrends => translate('monthly_spending_trends');
   String get thisMonth => translate('this_month');
@@ -98,6 +205,38 @@ class AppLocalizations {
   String get spent => translate('spent');
   String get left => translate('left');
   String get exceeded => translate('exceeded');
+
+  // Settings
+  String get appSettings => translate('app_settings');
+  String get preferences => translate('preferences');
+  String get language => translate('language');
+  String get theme => translate('theme');
+  String get darkMode => translate('dark_mode');
+  String get lightMode => translate('light_mode');
+  String get dataManagement => translate('data_management');
+  String get resetAppData => translate('reset_app_data');
+  String get exportData => translate('export_data');
+  String get about => translate('about');
+  String get version => translate('version');
+
+  // Categories
+  String get foods => translate('foods');
+  String get transportation => translate('transportation');
+  String get shopping => translate('shopping');
+  String get bills => translate('bills');
+
+  // Common
+  String get cancel => translate('cancel');
+  String get confirm => translate('confirm');
+  String get save => translate('save');
+  String get edit => translate('edit');
+  String get delete => translate('delete');
+  String get add => translate('add');
+  String get next => translate('next');
+  String get back => translate('back');
+  String get done => translate('done');
+  String get yes => translate('yes');
+  String get no => translate('no');
 }
 
 class _AppLocalizationsDelegate
