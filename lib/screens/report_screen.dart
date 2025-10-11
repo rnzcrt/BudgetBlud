@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../providers/expense_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'settings_screen.dart';
 
 class ReportScreen extends StatelessWidget {
   const ReportScreen({super.key});
+
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat('#,###');
+    return formatter.format(amount.round());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +48,12 @@ class ReportScreen extends StatelessWidget {
         ? monthlyTotals.values.elementAt(monthlyTotals.values.length - 2)
         : 0.0;
     double currentMonthSpent = monthlyTotals.values.last;
-    double comparisonPercent = lastMonthSpent == 0
-        ? 100
-        : ((currentMonthSpent - lastMonthSpent) / lastMonthSpent * 100);
+
+    // Only calculate percentage if there was spending last month
+    bool hasComparison = lastMonthSpent > 0;
+    double comparisonPercent = hasComparison
+        ? ((currentMonthSpent - lastMonthSpent) / lastMonthSpent * 100)
+        : 0.0;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.grey[50],
@@ -100,7 +109,7 @@ class ReportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '₱${currentMonthSpent.toStringAsFixed(0)}',
+                    '₱${_formatCurrency(currentMonthSpent)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -208,7 +217,7 @@ class ReportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '₱${currentMonthSpent.toStringAsFixed(0)}',
+                    '₱${_formatCurrency(currentMonthSpent)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -321,7 +330,7 @@ class ReportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '₱${currentMonthSpent.toStringAsFixed(0)}',
+                    '₱${_formatCurrency(currentMonthSpent)}',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -329,38 +338,49 @@ class ReportScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        comparisonPercent >= 0
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
-                        color: comparisonPercent >= 0
-                            ? Colors.red
-                            : Colors.green,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${comparisonPercent.abs().toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          color: comparisonPercent >= 0
-                              ? Colors.red
-                              : Colors.green,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                  hasComparison
+                      ? Row(
+                          children: [
+                            Icon(
+                              comparisonPercent >= 0
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward,
+                              color: comparisonPercent >= 0
+                                  ? Colors.red
+                                  : Colors.green,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${comparisonPercent.abs().toStringAsFixed(0)}%',
+                              style: TextStyle(
+                                color: comparisonPercent >= 0
+                                    ? Colors.red
+                                    : Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              comparisonPercent >= 0 ? 'increase' : 'decrease',
+                              style: TextStyle(
+                                color: isDarkMode
+                                    ? Colors.white60
+                                    : Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          'No previous month data',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white60 : Colors.grey,
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        comparisonPercent >= 0 ? 'increase' : 'decrease',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white60 : Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
