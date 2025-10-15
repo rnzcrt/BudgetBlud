@@ -21,11 +21,23 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^12.0.0
   pdf: ^3.11.3
+  supabase_flutter: ^2.8.3
+  intl: ^0.20.2
+  uuid: ^4.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "images/budget_blud.png"
+  adaptive_icon_background: "#2563EB"
+  adaptive_icon_foreground: "images/budget_blud.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
@@ -35,4 +47,5 @@ flutter:
     - images/pic3.png
     - images/set1.png
     - images/set2.png
+    - images/set3.png
     - images/budget_blud.png
