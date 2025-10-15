@@ -48,6 +48,11 @@ class SupabaseSyncService {
       final userId = SupabaseService().currentUserId;
       if (userId == null) throw Exception('User not authenticated');
 
+      // ADDED: Debug logging
+      debugPrint(
+        '🔍 Loading budget for user: $userId, month: $month, year: $year',
+      );
+
       final response = await _supabase
           .from('budgets')
           .select()
@@ -56,7 +61,15 @@ class SupabaseSyncService {
           .eq('year', year)
           .maybeSingle();
 
-      if (response == null) return null;
+      // ADDED: Debug logging
+      debugPrint('🔍 Supabase response: $response');
+
+      if (response == null) {
+        debugPrint('⚠️ No budget found in Supabase'); // ADDED
+        return null;
+      }
+
+      debugPrint('✅ Budget found: ₱${response['total_budget']}'); // ADDED
 
       return {
         'total_budget': (response['total_budget'] as num).toDouble(),
@@ -68,6 +81,48 @@ class SupabaseSyncService {
       };
     } catch (e) {
       debugPrint('❌ Error loading budget: $e');
+      return null;
+    }
+  }
+
+  /// Load the most recent budget (any month/year)
+  Future<Map<String, double>?> loadLatestBudget() async {
+    try {
+      final userId = SupabaseService().currentUserId;
+      if (userId == null) throw Exception('User not authenticated');
+
+      debugPrint('🔍 Loading latest budget for user: $userId');
+
+      final response = await _supabase
+          .from('budgets')
+          .select()
+          .eq('user_id', userId)
+          .order('year', ascending: false)
+          .order('month', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      debugPrint('🔍 Latest budget response: $response');
+
+      if (response == null) {
+        debugPrint('⚠️ No budget found in Supabase');
+        return null;
+      }
+
+      debugPrint(
+        '✅ Latest budget found: ₱${response['total_budget']} from ${response['month']}/${response['year']}',
+      );
+
+      return {
+        'total_budget': (response['total_budget'] as num).toDouble(),
+        'foods_limit': (response['foods_limit'] as num).toDouble(),
+        'transportation_limit': (response['transportation_limit'] as num)
+            .toDouble(),
+        'shopping_limit': (response['shopping_limit'] as num).toDouble(),
+        'bills_limit': (response['bills_limit'] as num).toDouble(),
+      };
+    } catch (e) {
+      debugPrint('❌ Error loading latest budget: $e');
       return null;
     }
   }

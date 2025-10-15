@@ -314,14 +314,18 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isOverBudget
-                        ? Colors.red[50]
+                        ? (isDarkMode
+                              ? Colors.red[900]!.withOpacity(0.3)
+                              : Colors.red[50]) // CHANGED
                         : (isDarkMode
                               ? const Color(0xFF1E3A5F).withOpacity(0.3)
                               : Colors.blue[50]),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isOverBudget
-                          ? Colors.red[200]!
+                          ? (isDarkMode
+                                ? Colors.red[400]!
+                                : Colors.red[200]!) // CHANGED
                           : (isDarkMode
                                 ? const Color(0xFF2563EB)
                                 : Colors.blue[200]!),
@@ -393,8 +397,12 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: isOverBudget
-                                  ? Colors.red[700]
-                                  : Colors.green[700],
+                                  ? (isDarkMode
+                                        ? Colors.red[300]
+                                        : Colors.red[700]) // CHANGED
+                                  : (isDarkMode
+                                        ? Colors.green[300]
+                                        : Colors.green[700]), // CHANGED
                             ),
                           ),
                           Text(
@@ -403,8 +411,12 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: isOverBudget
-                                  ? Colors.red[700]
-                                  : Colors.green[700],
+                                  ? (isDarkMode
+                                        ? Colors.red[300]
+                                        : Colors.red[700]) // CHANGED
+                                  : (isDarkMode
+                                        ? Colors.green[300]
+                                        : Colors.green[700]), // CHANGED
                             ),
                           ),
                         ],
@@ -425,7 +437,9 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
                                   "You've exceeded your budget! Please adjust.",
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.red[700],
+                                    color: isDarkMode
+                                        ? Colors.red[300]
+                                        : Colors.red[700], // CHANGED
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),

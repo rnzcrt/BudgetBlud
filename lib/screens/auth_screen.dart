@@ -192,15 +192,12 @@ class _AuthScreenState extends State<AuthScreen> {
         );
 
         // Small delay for user to see success message
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 300));
 
         if (!mounted) return;
 
-        // Navigate to setup screen for both signup and login
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const SetupScreen()),
-          (route) => false,
-        );
+        // Navigate to root - AuthWrapper will handle the rest via auth listener
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     } catch (e) {
       if (mounted) {
