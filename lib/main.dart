@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // ADD THIS
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,7 +58,13 @@ class MyApp extends StatelessWidget {
               Locale('tl', 'PH'),
               Locale('es', 'ES'),
             ],
-            localizationsDelegates: const [AppLocalizations.delegate],
+
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             home: const AuthWrapper(),
             routes: {
               '/onboarding': (context) => const OnboardingScreen(),
