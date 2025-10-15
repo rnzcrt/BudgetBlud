@@ -69,8 +69,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       );
 
       if (mounted) {
-        // Navigate to main app
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        // Just pop back - AuthWrapper will handle navigation via auth state listener
+        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Pop twice to go back to auth screen
       }
     } catch (e) {
       if (mounted) {

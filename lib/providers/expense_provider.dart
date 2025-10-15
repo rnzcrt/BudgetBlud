@@ -54,8 +54,10 @@ class ExpenseProvider extends ChangeNotifier {
       final syncService = SupabaseSyncService();
       final supabaseExpenses = await syncService.loadAllExpenses();
 
-      // Merge with local data (Supabase is source of truth)
+      // CRITICAL FIX: Replace local data entirely with Supabase data
       _expenses = supabaseExpenses;
+
+      // Save to local storage
       await _saveExpensesLocal();
 
       debugPrint('✅ Synced ${_expenses.length} expenses from Supabase');
@@ -207,6 +209,19 @@ class ExpenseProvider extends ChangeNotifier {
     }
 
     return categoryMap.values.toList()..sort();
+  }
+
+  /// Clear all expenses (for logout)
+  Future<void> clearAllExpensesForLogout() async {
+    debugPrint('🔵 Clearing expense provider data');
+
+    _expenses.clear();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('expenses');
+
+    notifyListeners();
+    debugPrint('✅ Expense provider cleared');
   }
 
   /// Clear ONLY current month expenses (local + Supabase)

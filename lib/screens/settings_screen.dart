@@ -914,7 +914,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Description
               Text(
-                'Are you sure you want to sign out? Your data will be synced to the cloud.',
+                'Are you sure you want to sign out? Your data is safely stored in the cloud.',
                 style: TextStyle(
                   color: isDarkMode ? Colors.white70 : Colors.grey[600],
                   fontSize: 15,
@@ -997,8 +997,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
 
                         try {
-                          // Sign out from Supabase
-                          await SupabaseService().signOut();
+                          debugPrint('🔵 Starting sign out process...');
+
+                          // STEP 1: Clear provider data FIRST
+                          if (!mounted) return;
+                          final budgetProvider = Provider.of<BudgetProvider>(
+                            context,
+                            listen: false,
+                          );
+                          final expenseProvider = Provider.of<ExpenseProvider>(
+                            context,
+                            listen: false,
+                          );
+
+                          await budgetProvider.clearBudget();
+                          await expenseProvider.clearAllExpensesForLogout();
+
+                          // STEP 2: Clear SharedPreferences
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.clear();
+                          debugPrint('✅ All local data cleared');
+
+                          // STEP 3: Sign out from Supabase
+                          await SupabaseService().client.auth.signOut();
+                          debugPrint('✅ Signed out from Supabase');
 
                           // Small delay
                           await Future.delayed(

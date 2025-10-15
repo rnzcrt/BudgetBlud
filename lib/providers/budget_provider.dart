@@ -28,6 +28,78 @@ class BudgetProvider extends ChangeNotifier {
     _loadBudget();
   }
 
+  /// Force reload budget from Supabase (used after login)
+  Future<void> reloadFromSupabase() async {
+    if (!SupabaseService().isAuthenticated) {
+      debugPrint('⚠️ Not authenticated, cannot reload budget');
+      return;
+    }
+
+    try {
+      debugPrint('🔵 Reloading budget from Supabase...');
+      final syncService = SupabaseSyncService();
+
+      final now = DateTime.now();
+      debugPrint('🔍 Checking for budget in ${now.month}/${now.year}');
+
+      var supabaseBudget = await syncService.loadBudget(now.month, now.year);
+
+      // If no budget for current month, try to find the most recent budget
+      if (supabaseBudget == null) {
+        debugPrint(
+          '⚠️ No budget for current month, searching for latest budget...',
+        );
+        supabaseBudget = await syncService.loadLatestBudget();
+
+        if (supabaseBudget != null) {
+          debugPrint('✅ Found budget from previous month, using it');
+          _month = now.month;
+          _year = now.year;
+        }
+      } else {
+        _month = now.month;
+        _year = now.year;
+      }
+
+      if (supabaseBudget != null) {
+        _totalBudget = supabaseBudget['total_budget']!;
+        _foodsLimit = supabaseBudget['foods_limit']!;
+        _transportationLimit = supabaseBudget['transportation_limit']!;
+        _shoppingLimit = supabaseBudget['shopping_limit']!;
+        _billsLimit = supabaseBudget['bills_limit']!;
+
+        debugPrint('✅ Budget reloaded from Supabase: ₱$_totalBudget');
+
+        // Update local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setDouble('total_budget', _totalBudget);
+        await prefs.setDouble('foods_limit', _foodsLimit);
+        await prefs.setDouble('transportation_limit', _transportationLimit);
+        await prefs.setDouble('shopping_limit', _shoppingLimit);
+        await prefs.setDouble('bills_limit', _billsLimit);
+
+        _isLoaded = true;
+        notifyListeners();
+
+        // ADDED: Small delay to ensure notifyListeners completes
+        await Future.delayed(const Duration(milliseconds: 100));
+      } else {
+        debugPrint('⚠️ No budget found in Supabase at all');
+        _totalBudget = 0.0;
+        _foodsLimit = 0.0;
+        _transportationLimit = 0.0;
+        _shoppingLimit = 0.0;
+        _billsLimit = 0.0;
+        _isLoaded = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('❌ Error reloading budget from Supabase: $e');
+      _isLoaded = true;
+      notifyListeners();
+    }
+  }
+
   // Load budget from SharedPreferences
   Future<void> _loadBudget() async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,8 +111,8 @@ class BudgetProvider extends ChangeNotifier {
 
     debugPrint('🔵 Loaded budget from local: ₱$_totalBudget');
 
-    // Load from Supabase if authenticated
-    if (SupabaseService().isAuthenticated) {
+    // Load from Supabase if authenticated AND no local budget
+    if (SupabaseService().isAuthenticated && _totalBudget == 0) {
       try {
         final syncService = SupabaseSyncService();
         final supabaseBudget = await syncService.loadBudget(_month, _year);
@@ -110,6 +182,28 @@ class BudgetProvider extends ChangeNotifier {
 
     debugPrint('🔵 Reloaded budget: ₱$_totalBudget');
     notifyListeners();
+  }
+
+  /// Clear all budget data (for logout)
+  Future<void> clearBudget() async {
+    debugPrint('🔵 Clearing budget provider data');
+
+    _totalBudget = 0.0;
+    _foodsLimit = 0.0;
+    _transportationLimit = 0.0;
+    _shoppingLimit = 0.0;
+    _billsLimit = 0.0;
+    _isLoaded = false;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('total_budget');
+    await prefs.remove('foods_limit');
+    await prefs.remove('transportation_limit');
+    await prefs.remove('shopping_limit');
+    await prefs.remove('bills_limit');
+
+    notifyListeners();
+    debugPrint('✅ Budget provider cleared');
   }
 
   Future<void> setCategoryLimits({

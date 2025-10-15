@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -35,17 +36,13 @@ class SupabaseService {
     try {
       debugPrint('🔵 Attempting to send OTP to: $email');
 
-      await client.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: true, // This ensures new users are created
-      );
+      await client.auth.signInWithOtp(email: email, shouldCreateUser: true);
 
       debugPrint('✅ OTP request successful for: $email');
     } on AuthException catch (e) {
       debugPrint('❌ AuthException: ${e.message}');
       debugPrint('❌ Status Code: ${e.statusCode}');
 
-      // Handle specific error cases
       if (e.message.toLowerCase().contains('rate limit')) {
         throw Exception(
           'Too many attempts. Please wait 60 seconds and try again.',
@@ -70,17 +67,9 @@ class SupabaseService {
     try {
       debugPrint('🔵 Attempting to sign in: $email');
 
-      // Check if user exists first
-      final exists = await checkEmailExists(email);
-
-      if (!exists) {
-        throw Exception('No account found. Please sign up first.');
-      }
-
-      await client.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: false, // Don't create user for sign-in
-      );
+      // Just send OTP without checking if email exists
+      // Supabase will handle whether user exists or not
+      await client.auth.signInWithOtp(email: email, shouldCreateUser: false);
 
       debugPrint('✅ Sign-in OTP sent to: $email');
     } on AuthException catch (e) {
@@ -166,7 +155,6 @@ class SupabaseService {
       }
     } catch (e) {
       debugPrint('⚠️ Error with user profile (non-critical): $e');
-      // Don't throw - this is non-critical
     }
   }
 
@@ -175,33 +163,25 @@ class SupabaseService {
     try {
       debugPrint('🔵 Checking if email exists: $email');
 
-      // First, try to check public.users table
-      try {
-        final response = await client
-            .from('users')
-            .select('email')
-            .eq('email', email)
-            .maybeSingle();
+      // Check public.users table
+      final response = await client
+          .from('users')
+          .select('email')
+          .eq('email', email)
+          .maybeSingle();
 
-        if (response != null) {
-          debugPrint('✅ Email found in users table: $email');
-          return true;
-        }
-      } catch (e) {
-        debugPrint('⚠️ Could not check users table: $e');
+      if (response != null) {
+        debugPrint('✅ Email found in users table: $email');
+        return true;
       }
 
-      // Fallback: Try to sign in with OTP to check if email exists in auth
-      // If email doesn't exist, Supabase will create a new user
-      // So for sign-in, we'll just allow the attempt and let Supabase handle it
-
-      // For now, we'll be more lenient and allow sign-in attempts
-      // The real check happens when OTP is sent
-      debugPrint('⚠️ Email not found in users table, allowing sign-in attempt');
-      return true; // Allow sign-in attempt
+      // If not found, allow sign-in attempt
+      // The auth system will handle if user exists or not
+      debugPrint('ℹ️ Email not in users table, allowing sign-in attempt');
+      return true;
     } catch (e) {
       debugPrint('❌ Error checking email: $e');
-      return true; // Allow attempt on error
+      return true;
     }
   }
 
@@ -227,13 +207,34 @@ class SupabaseService {
     }
   }
 
-  /// Sign out
+  /// Sign out - CRITICAL FIX: Clear ALL local data completely
   Future<void> signOut() async {
     try {
+      debugPrint('🔵 Starting sign out process...');
+      debugPrint('🔵 Current user: ${currentUserEmail}');
+
+      // STEP 1: Clear ALL local SharedPreferences FIRST
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      debugPrint('✅ All local preferences cleared');
+
+      // STEP 2: Sign out from Supabase auth
       await client.auth.signOut();
-      debugPrint('✅ User signed out');
+      debugPrint('✅ User signed out from Supabase');
+
+      // STEP 3: Wait a moment to ensure everything is cleared
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      debugPrint('✅ Sign out complete - all local data cleared');
     } catch (e) {
       debugPrint('❌ Error signing out: $e');
+      // Even if there's an error, try to clear local data
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      } catch (clearError) {
+        debugPrint('❌ Failed to clear preferences: $clearError');
+      }
       rethrow;
     }
   }
