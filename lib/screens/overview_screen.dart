@@ -11,8 +11,8 @@ class OverviewScreen extends StatelessWidget {
   const OverviewScreen({super.key});
 
   String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,###');
-    return formatter.format(amount.round());
+    final formatter = NumberFormat('#,##0.00');
+    return formatter.format(amount);
   }
 
   @override
@@ -176,28 +176,32 @@ class OverviewScreen extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "$category /₱${_formatCurrency(limit)}",
-                                    style: TextStyle(
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 15,
-                                    ),
+                              Flexible(
+                                child: Text(
+                                  "$category /₱${_formatCurrency(limit)}",
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
                                   ),
-                                ],
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              Text(
-                                left >= 0
-                                    ? "${localizations.left}: ₱${_formatCurrency(left)}"
-                                    : "${localizations.exceeded}: ₱${_formatCurrency(left.abs())}",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: left >= 0 ? Colors.green : Colors.red,
+                              Flexible(
+                                child: Text(
+                                  left >= 0
+                                      ? "${localizations.left}: ₱${_formatCurrency(left)}"
+                                      : "${localizations.exceeded}: ₱${_formatCurrency(left.abs())}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: left >= 0
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

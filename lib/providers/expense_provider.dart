@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense.dart';
+import '../providers/budget_provider.dart';
+import '../services/notification_service.dart';
 import '../services/supabase_service.dart';
 import '../services/supabase_sync_service.dart';
 
@@ -43,6 +46,132 @@ class ExpenseProvider extends ChangeNotifier {
     await prefs.setString('expenses', encoded);
   }
 
+  /// Check budget thresholds and trigger notifications
+  /// isEdit: true when called from editExpense (allows re-checking thresholds)
+  Future<void> _checkBudgetThresholds(
+    BuildContext? context, {
+    bool isEdit = false,
+  }) async {
+    if (context == null) return;
+
+    final budgetProvider = Provider.of<BudgetProvider>(context, listen: false);
+    final notificationService = NotificationService();
+
+    // Calculate current month total spending
+    final currentMonthExpenses = getCurrentMonthExpenses();
+    final totalSpent = currentMonthExpenses.fold(
+      0.0,
+      (sum, e) => sum + e.amount,
+    );
+    final totalBudget = budgetProvider.totalBudget;
+
+    if (totalBudget == 0) return;
+
+    // Check overall budget
+    final percentage = totalSpent / totalBudget;
+
+    // 100% threshold
+    if (percentage >= 1.0) {
+      // If editing and crossed 100%, always notify (even if notified before)
+      if (isEdit || !await _hasNotified('budget_100')) {
+        await notificationService.show100PercentAlert(totalSpent, totalBudget);
+        await _markNotified('budget_100');
+        debugPrint('🚨 100% budget notification sent (edit: $isEdit)');
+      }
+    }
+    // 80% threshold (only if below 100%)
+    else if (percentage >= 0.8) {
+      if (isEdit || !await _hasNotified('budget_80')) {
+        await notificationService.show80PercentWarning(totalSpent, totalBudget);
+        await _markNotified('budget_80');
+        debugPrint('⚠️ 80% budget notification sent (edit: $isEdit)');
+      }
+    }
+
+    // Check category budgets
+    await _checkCategoryThresholds(
+      currentMonthExpenses,
+      budgetProvider,
+      notificationService,
+      isEdit: isEdit,
+    );
+  }
+
+  /// Check individual category thresholds
+  Future<void> _checkCategoryThresholds(
+    List<Expense> expenses,
+    BudgetProvider budgetProvider,
+    NotificationService notificationService, {
+    bool isEdit = false,
+  }) async {
+    Map<String, double> categorySpending = {};
+
+    for (var expense in expenses) {
+      categorySpending[expense.category] =
+          (categorySpending[expense.category] ?? 0) + expense.amount;
+    }
+
+    // Check predefined categories
+    final categories = {
+      'Foods': budgetProvider.foodsLimit,
+      'Food': budgetProvider.foodsLimit,
+      'Transportation': budgetProvider.transportationLimit,
+      'Transport': budgetProvider.transportationLimit,
+      'Shopping': budgetProvider.shoppingLimit,
+      'Bills': budgetProvider.billsLimit,
+    };
+
+    for (var entry in categories.entries) {
+      final category = entry.key;
+      final limit = entry.value;
+
+      if (limit == 0) continue;
+
+      final spent =
+          categorySpending[category] ??
+          categorySpending[category.toLowerCase()] ??
+          0;
+      final percentage = spent / limit;
+
+      // 100% category threshold
+      if (percentage >= 1.0) {
+        if (isEdit || !await _hasNotified('${category}_100')) {
+          await notificationService.showCategoryExceeded(
+            category,
+            spent,
+            limit,
+          );
+          await _markNotified('${category}_100');
+          debugPrint('🚨 $category 100% notification sent (edit: $isEdit)');
+        }
+      }
+      // 80% category threshold (only if below 100%)
+      else if (percentage >= 0.8) {
+        if (isEdit || !await _hasNotified('${category}_80')) {
+          await notificationService.showCategoryWarning(category, spent, limit);
+          await _markNotified('${category}_80');
+          debugPrint('⚠️ $category 80% notification sent (edit: $isEdit)');
+        }
+      }
+    }
+  }
+
+  /// Check if notification already sent this month
+  Future<bool> _hasNotified(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final monthKey = '${key}_${now.year}_${now.month}';
+    return prefs.getBool(monthKey) ?? false;
+  }
+
+  /// Mark notification as sent for this month
+  Future<void> _markNotified(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final monthKey = '${key}_${now.year}_${now.month}';
+    await prefs.setBool(monthKey, true);
+  }
+
   /// Sync FROM Supabase (download all expenses)
   Future<void> syncFromSupabase() async {
     if (!SupabaseService().isAuthenticated) return;
@@ -69,11 +198,14 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  /// Add expense (save locally + sync to Supabase)
-  Future<void> addExpense(Expense expense) async {
+  /// Add expense with notification check
+  Future<void> addExpense(Expense expense, [BuildContext? context]) async {
     _expenses.add(expense);
     await _saveExpensesLocal();
     notifyListeners();
+
+    // Check thresholds after adding expense
+    await _checkBudgetThresholds(context, isEdit: false);
 
     // Sync to Supabase in background
     if (SupabaseService().isAuthenticated) {
@@ -85,13 +217,19 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  /// Edit expense (save locally + sync to Supabase)
-  Future<void> editExpense(Expense updatedExpense) async {
+  /// Edit expense with notification check
+  Future<void> editExpense(
+    Expense updatedExpense, [
+    BuildContext? context,
+  ]) async {
     final index = _expenses.indexWhere((e) => e.id == updatedExpense.id);
     if (index != -1) {
       _expenses[index] = updatedExpense;
       await _saveExpensesLocal();
       notifyListeners();
+
+      // ✅ CRITICAL: Pass isEdit=true to allow re-triggering notifications
+      await _checkBudgetThresholds(context, isEdit: true);
 
       // Sync to Supabase in background
       if (SupabaseService().isAuthenticated) {

@@ -92,7 +92,7 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Total category limits (₱${NumberFormat('#,###').format(_totalAllocated)}) exceed your budget (₱${NumberFormat('#,###').format(totalBudget)})',
+              'Total category limits (₱${NumberFormat('#,##0.00').format(_totalAllocated)}) exceed your budget (₱${NumberFormat('#,##0.00').format(totalBudget)})',
             ),
             backgroundColor: Colors.red,
           ),
@@ -126,12 +126,14 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
+          // Label on top
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
             child: Text(
-              "$label:",
+              label,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -139,85 +141,120 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                TextInputFormatter.withFunction((oldValue, newValue) {
-                  if (newValue.text.isEmpty) {
-                    return newValue;
-                  }
-                  final value = newValue.text.replaceAll(',', '');
-                  final formatter = NumberFormat('#,###');
-                  final newText = formatter.format(int.parse(value));
+          // Input field
+          TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^[\d,]*\.?\d{0,2}')),
+              TextInputFormatter.withFunction((oldValue, newValue) {
+                if (newValue.text.isEmpty) {
+                  return newValue;
+                }
+
+                // Allow typing decimal point
+                String text = newValue.text;
+
+                // Prevent multiple decimal points
+                if (text.split('.').length > 2) {
+                  return oldValue;
+                }
+
+                // Format only the integer part with commas
+                if (text.contains('.')) {
+                  final parts = text.split('.');
+                  final intPart = parts[0].replaceAll(',', '');
+                  if (intPart.isEmpty) return newValue;
+
+                  final parsedInt = double.tryParse(intPart);
+                  if (parsedInt == null) return oldValue;
+
+                  final formattedInt = parsedInt % 1 == 0
+                      ? NumberFormat('#,###').format(parsedInt.toInt())
+                      : NumberFormat('#,##0.00').format(parsedInt);
+                  final newText = '$formattedInt.${parts[1]}';
+
                   return newValue.copyWith(
                     text: newText,
                     selection: TextSelection.collapsed(offset: newText.length),
                   );
-                }),
-              ],
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: isDarkMode ? Colors.white : Colors.black,
-              ),
-              decoration: InputDecoration(
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 6, top: 1),
-                  child: Text(
-                    "₱",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white60 : Colors.grey[600],
-                    ),
-                  ),
-                ),
-                prefixIconConstraints: const BoxConstraints(
-                  minWidth: 0,
-                  minHeight: 0,
-                ),
-                hintText: "0",
-                hintStyle: TextStyle(
-                  color: isDarkMode ? Colors.white38 : Colors.grey[400],
-                  fontSize: 15,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF2563EB),
-                    width: 2,
-                  ),
-                ),
-                filled: true,
-                fillColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
-              validator: (value) {
-                final amount = _parseAmount(value ?? "");
-                if (amount < 0) {
-                  return "Cannot be negative";
+                } else {
+                  final value = text.replaceAll(',', '');
+                  if (value.isEmpty) return newValue;
+
+                  final parsed = double.tryParse(value);
+                  if (parsed == null) return oldValue;
+
+                  final newText = parsed % 1 == 0
+                      ? NumberFormat('#,###').format(parsed.toInt())
+                      : NumberFormat('#,##0.00').format(parsed);
+
+                  return newValue.copyWith(
+                    text: newText,
+                    selection: TextSelection.collapsed(offset: newText.length),
+                  );
                 }
-                return null;
-              },
+              }),
+            ],
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: isDarkMode ? Colors.white : Colors.black,
             ),
+            decoration: InputDecoration(
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 6, top: 1),
+                child: Text(
+                  "₱",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white60 : Colors.grey[600],
+                  ),
+                ),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+              hintText: "0",
+              hintStyle: TextStyle(
+                color: isDarkMode ? Colors.white38 : Colors.grey[400],
+                fontSize: 15,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2563EB),
+                  width: 2,
+                ),
+              ),
+              filled: true,
+              fillColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+            validator: (value) {
+              final amount = _parseAmount(value ?? "");
+              if (amount < 0) {
+                return "Cannot be negative";
+              }
+              return null;
+            },
           ),
         ],
       ),
@@ -245,247 +282,258 @@ class _CategoryLimitsScreenState extends State<CategoryLimitsScreen> {
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Section
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.isRenewal ? "Monthly Renewal" : "Getting started",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E3A5F),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Divide your budget",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDarkMode ? Colors.white60 : Colors.grey[400],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                // Title
-                Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.isRenewal
-                            ? "Renew Category Limits"
-                            : "Set Category Limits",
-                        textAlign: TextAlign.center,
+                            ? "Monthly Renewal"
+                            : "Getting started",
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: isDarkMode
                               ? Colors.white
                               : const Color(0xFF1E3A5F),
-                          height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
-                        "How much will you spend on each category?",
-                        textAlign: TextAlign.center,
+                        "Divide your budget",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: isDarkMode ? Colors.white60 : Colors.grey[400],
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Budget Summary Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isOverBudget
-                        ? (isDarkMode
-                              ? Colors.red[900]!.withOpacity(0.3)
-                              : Colors.red[50]) // CHANGED
-                        : (isDarkMode
-                              ? const Color(0xFF1E3A5F).withOpacity(0.3)
-                              : Colors.blue[50]),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isOverBudget
-                          ? (isDarkMode
-                                ? Colors.red[400]!
-                                : Colors.red[200]!) // CHANGED
-                          : (isDarkMode
-                                ? const Color(0xFF2563EB)
-                                : Colors.blue[200]!),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Total Budget:",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1E3A5F),
-                            ),
-                          ),
-                          Text(
-                            "₱${NumberFormat('#,###').format(totalBudget)}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1E3A5F),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Allocated:",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1E3A5F),
-                            ),
-                          ),
-                          Text(
-                            "₱${NumberFormat('#,###').format(_totalAllocated)}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isOverBudget
-                                  ? Colors.red[700]
-                                  : (isDarkMode
-                                        ? Colors.white
-                                        : const Color(0xFF1E3A5F)),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            isOverBudget ? "Over Budget:" : "Remaining:",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: isOverBudget
-                                  ? (isDarkMode
-                                        ? Colors.red[300]
-                                        : Colors.red[700]) // CHANGED
-                                  : (isDarkMode
-                                        ? Colors.green[300]
-                                        : Colors.green[700]), // CHANGED
-                            ),
-                          ),
-                          Text(
-                            "₱${NumberFormat('#,###').format(remaining.abs())}",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isOverBudget
-                                  ? (isDarkMode
-                                        ? Colors.red[300]
-                                        : Colors.red[700]) // CHANGED
-                                  : (isDarkMode
-                                        ? Colors.green[300]
-                                        : Colors.green[700]), // CHANGED
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (isOverBudget)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 16,
-                                color: Colors.red[700],
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  "You've exceeded your budget! Please adjust.",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDarkMode
-                                        ? Colors.red[300]
-                                        : Colors.red[700], // CHANGED
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
+                  const SizedBox(height: 32),
+
+                  // Title (reduced spacing)
+                  Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.isRenewal
+                              ? "Renew Category Limits"
+                              : "Set Category Limits",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF1E3A5F),
+                            height: 1.2,
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Category Fields
-                _buildCategoryField("Foods", foodsController),
-                _buildCategoryField("Transportation", transportationController),
-                _buildCategoryField("Shopping", shoppingController),
-                _buildCategoryField("Bills", billsController),
-                const SizedBox(height: 16),
-                // Illustration
-                Center(child: Image.asset("images/set3.png", height: 200)),
-                const Spacer(),
-                // Finish Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isOverBudget
-                          ? Colors.grey
-                          : const Color(0xFF2563EB),
-                      padding: const EdgeInsets.symmetric(vertical: 26),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: isOverBudget ? null : _finishSetup,
-                    child: Text(
-                      widget.isRenewal ? "Complete Renewal" : "Finish Setup",
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "How much will you spend on each category?",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDarkMode
+                                ? Colors.white60
+                                : Colors.grey[400],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-              ],
+                  const SizedBox(height: 20),
+
+                  // Budget Summary Card (more compact)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isOverBudget
+                          ? (isDarkMode
+                                ? Colors.red[900]!.withOpacity(0.3)
+                                : Colors.red[50])
+                          : (isDarkMode
+                                ? const Color(0xFF1E3A5F).withOpacity(0.3)
+                                : Colors.blue[50]),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isOverBudget
+                            ? (isDarkMode ? Colors.red[400]! : Colors.red[200]!)
+                            : (isDarkMode
+                                  ? const Color(0xFF2563EB)
+                                  : Colors.blue[200]!),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Total Budget:",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A5F),
+                              ),
+                            ),
+                            Text(
+                              "₱${NumberFormat('#,##0.00').format(totalBudget)}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A5F),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Allocated:",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A5F),
+                              ),
+                            ),
+                            Text(
+                              "₱${NumberFormat('#,##0.00').format(_totalAllocated)}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isOverBudget
+                                    ? Colors.red[700]
+                                    : (isDarkMode
+                                          ? Colors.white
+                                          : const Color(0xFF1E3A5F)),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 14),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isOverBudget ? "Over Budget:" : "Remaining:",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isOverBudget
+                                    ? (isDarkMode
+                                          ? Colors.red[300]
+                                          : Colors.red[700])
+                                    : (isDarkMode
+                                          ? Colors.green[300]
+                                          : Colors.green[700]),
+                              ),
+                            ),
+                            Text(
+                              "₱${NumberFormat('#,##0.00').format(remaining.abs())}",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: isOverBudget
+                                    ? (isDarkMode
+                                          ? Colors.red[300]
+                                          : Colors.red[700])
+                                    : (isDarkMode
+                                          ? Colors.green[300]
+                                          : Colors.green[700]),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isOverBudget)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 14,
+                                  color: Colors.red[700],
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    "You've exceeded your budget! Please adjust.",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDarkMode
+                                          ? Colors.red[300]
+                                          : Colors.red[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Category Fields (now with labels on top)
+                  _buildCategoryField("Foods", foodsController),
+                  _buildCategoryField(
+                    "Transportation",
+                    transportationController,
+                  ),
+                  _buildCategoryField("Shopping", shoppingController),
+                  _buildCategoryField("Bills", billsController),
+                  const SizedBox(height: 16),
+
+                  // Illustration (smaller)
+                  Center(child: Image.asset("images/set3.png", height: 140)),
+                  const SizedBox(height: 24),
+
+                  // Button (now inside ScrollView)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isOverBudget
+                            ? Colors.grey
+                            : const Color(0xFF2563EB),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: isOverBudget ? null : _finishSetup,
+                      child: Text(
+                        widget.isRenewal ? "Complete Renewal" : "Finish Setup",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
