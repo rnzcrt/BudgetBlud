@@ -270,233 +270,238 @@ class _AuthScreenState extends State<AuthScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 40),
 
-              // Logo
-              Image.asset("images/budget_blud.png", width: 100),
-              const SizedBox(height: 20),
+                // Logo
+                Image.asset("images/budget_blud.png", width: 100),
+                const SizedBox(height: 20),
 
-              // Title
-              Text(
-                _otpSent
-                    ? 'Verify Code'
-                    : (_isSignUp ? 'Create Account' : 'Welcome Back'),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-
-              // Subtitle
-              Text(
-                _otpSent
-                    ? 'Enter the 6-digit code sent to your email'
-                    : (_isSignUp
-                          ? 'Sign up to get started'
-                          : 'Login to continue'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-
-              // Form Fields
-              if (!_otpSent) ...[
-                // Email field
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    filled: true,
-                    fillColor: isDark ? Colors.grey[800] : Colors.blue[50],
-                  ),
-                ),
-              ] else ...[
-                // OTP field
-                TextField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
+                // Title
+                Text(
+                  _otpSent
+                      ? 'Verify Code'
+                      : (_isSignUp ? 'Create Account' : 'Welcome Back'),
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 8,
-                    color: isDark ? Colors.white : Colors.black,
                   ),
-                  decoration: InputDecoration(
-                    labelText: 'Verification Code',
-                    hintText: '000000',
-                    hintStyle: TextStyle(
-                      color: isDark ? Colors.white38 : Colors.grey[400],
-                      letterSpacing: 8,
-                    ),
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    filled: true,
-                    fillColor: isDark ? Colors.grey[800] : Colors.blue[50],
-                    counterText: '',
-                  ),
-                  onChanged: (value) {
-                    if (value.length == 6) {
-                      _verifyOTP();
-                    }
-                  },
+                  textAlign: TextAlign.center,
                 ),
-              ],
+                const SizedBox(height: 8),
 
-              const SizedBox(height: 16),
-
-              // Error message
-              if (_errorMessage != null) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red[200]!),
+                // Subtitle
+                Text(
+                  _otpSent
+                      ? 'Enter the 6-digit code sent to your email'
+                      : (_isSignUp
+                            ? 'Sign up to get started'
+                            : 'Login to continue'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.red[700],
-                        size: 20,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+
+                // Form Fields
+                if (!_otpSent) ...[
+                  // Email field
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
+                      filled: true,
+                      fillColor: isDark ? Colors.grey[800] : Colors.blue[50],
+                    ),
+                  ),
+                ] else ...[
+                  // OTP field
+                  TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Verification Code',
+                      hintText: '000000',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.grey[400],
+                        letterSpacing: 8,
+                      ),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey[800] : Colors.blue[50],
+                      counterText: '',
+                    ),
+                    onChanged: (value) {
+                      if (value.length == 6) {
+                        _verifyOTP();
+                      }
+                    },
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+
+                // Error message
+                if (_errorMessage != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Colors.red[700],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Main action button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : (_otpSent ? _verifyOTP : _sendOTP),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      disabledBackgroundColor: Colors.grey,
+                      padding: const EdgeInsets.symmetric(vertical: 21),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            _otpSent
+                                ? 'Verify'
+                                : (_isSignUp ? 'Sign Up' : 'Login'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+
+                // Resend OTP button
+                if (_otpSent) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Didn't receive the code? ",
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _isLoading || !_canSendOtp()
+                            ? null
+                            : _resendOTP,
                         child: Text(
-                          _errorMessage!,
+                          _canSendOtp() ? 'Resend' : 'Please wait...',
                           style: TextStyle(
-                            color: Colors.red[700],
-                            fontSize: 13,
+                            color: _canSendOtp()
+                                ? const Color(0xFF2563EB)
+                                : Colors.grey,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
+                ],
 
-              // Main action button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : (_otpSent ? _verifyOTP : _sendOTP),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    disabledBackgroundColor: Colors.grey,
-                    padding: const EdgeInsets.symmetric(vertical: 21),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          _otpSent
-                              ? 'Verify'
-                              : (_isSignUp ? 'Sign Up' : 'Login'),
+                const SizedBox(height: 40),
+
+                // Toggle between Sign In and Sign Up
+                if (!_otpSent) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _isSignUp
+                            ? "Already have an account? "
+                            : "Don't have an account? ",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isSignUp = !_isSignUp;
+                            _errorMessage = null;
+                          });
+                        },
+                        child: Text(
+                          _isSignUp ? 'Login' : 'Sign Up',
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: Color(0xFF2563EB),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                ),
-              ),
+                      ),
+                    ],
+                  ),
+                ],
 
-              // Resend OTP button
-              if (_otpSent) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Didn't receive the code? ",
-                      style: TextStyle(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _isLoading || !_canSendOtp()
-                          ? null
-                          : _resendOTP,
-                      child: Text(
-                        _canSendOtp() ? 'Resend' : 'Please wait...',
-                        style: TextStyle(
-                          color: _canSendOtp()
-                              ? const Color(0xFF2563EB)
-                              : Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox(height: 20),
               ],
-
-              const Spacer(),
-
-              // Toggle between Sign In and Sign Up
-              if (!_otpSent)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isSignUp
-                          ? "Already have an account? "
-                          : "Don't have an account? ",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isSignUp = !_isSignUp;
-                          _errorMessage = null;
-                        });
-                      },
-                      child: Text(
-                        _isSignUp ? 'Login' : 'Sign Up',
-                        style: const TextStyle(
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
         ),
       ),

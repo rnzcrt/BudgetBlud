@@ -39,7 +39,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.initState();
     if (widget.expense != null) {
       amountController.text = NumberFormat(
-        "#,###",
+        "#,##0.00",
       ).format(widget.expense!.amount);
       noteController.text = widget.expense!.note ?? '';
       category = widget.expense!.category;
@@ -104,9 +104,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         finalCategory = category!;
       }
 
-      // FIX: Generate proper UUID instead of timestamp
       final expense = Expense(
-        id: widget.expense?.id ?? const Uuid().v4(), // CHANGED THIS LINE
+        id: widget.expense?.id ?? const Uuid().v4(),
         title: noteController.text.isNotEmpty ? noteController.text : 'Expense',
         amount: double.parse(clean),
         category: finalCategory,
@@ -116,9 +115,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       final provider = Provider.of<ExpenseProvider>(context, listen: false);
       if (widget.expense == null) {
-        provider.addExpense(expense);
+        // CHANGED: Pass context to check thresholds
+        provider.addExpense(expense, context);
       } else {
-        provider.editExpense(expense);
+        // CHANGED: Pass context to check thresholds
+        provider.editExpense(expense, context);
       }
       Navigator.pop(context);
     }
@@ -181,7 +182,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: amountController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^[\d,]*\.?\d{0,2}'),
+                  ),
                   CurrencyInputFormatter(),
                 ],
                 style: TextStyle(
@@ -668,14 +671,48 @@ class CurrencyInputFormatter extends TextInputFormatter {
       return newValue.copyWith(text: '');
     }
 
-    String clean = newValue.text.replaceAll(',', '');
-    final parsed = int.tryParse(clean);
-    if (parsed == null) return oldValue;
+    String text = newValue.text.replaceAll(',', '');
 
-    final newString = NumberFormat("#,###").format(parsed);
-    return TextEditingValue(
-      text: newString,
-      selection: TextSelection.collapsed(offset: newString.length),
-    );
+    if (!RegExp(r'^\d*\.?\d{0,2}$').hasMatch(text)) {
+      return oldValue;
+    }
+
+    if (text.split('.').length > 2) {
+      return oldValue;
+    }
+
+    if (text.contains('.')) {
+      final parts = text.split('.');
+      if (parts[0].isEmpty) {
+        return newValue.copyWith(
+          text: '.${parts[1]}',
+          selection: TextSelection.collapsed(offset: parts[1].length + 1),
+        );
+      }
+
+      final parsedInt = double.tryParse(parts[0]);
+      if (parsedInt == null) return oldValue;
+
+      final formattedInt = parsedInt % 1 == 0
+          ? NumberFormat('#,###').format(parsedInt.toInt())
+          : NumberFormat('#,##0.00').format(parsedInt);
+      final newString = '$formattedInt.${parts[1]}';
+
+      return TextEditingValue(
+        text: newString,
+        selection: TextSelection.collapsed(offset: newString.length),
+      );
+    } else {
+      final parsed = double.tryParse(text);
+      if (parsed == null) return oldValue;
+
+      final newString = parsed % 1 == 0
+          ? NumberFormat("#,###").format(parsed.toInt())
+          : NumberFormat("#,##0.00").format(parsed);
+      return TextEditingValue(
+        text: newString,
+        selection: TextSelection.collapsed(offset: newString.length),
+      );
+    }
   }
 }

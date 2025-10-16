@@ -9,8 +9,8 @@ class BudgetScreen extends StatelessWidget {
   const BudgetScreen({super.key});
 
   String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,###');
-    return formatter.format(amount.round());
+    final formatter = NumberFormat('#,##0.00');
+    return formatter.format(amount);
   }
 
   @override

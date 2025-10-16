@@ -650,11 +650,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       isDarkMode,
                     ),
                     const SizedBox(height: 8),
-                    _buildResetItem(
-                      '✓',
-                      'Current month\'s category limits',
-                      isDarkMode,
-                    ),
+                    _buildResetItem('✓', 'Current category limits', isDarkMode),
                   ],
                 ),
               ),

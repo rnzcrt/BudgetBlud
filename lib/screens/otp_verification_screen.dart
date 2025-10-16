@@ -141,148 +141,150 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withOpacity(0.1),
-                  shape: BoxShape.circle,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.email_outlined,
+                    size: 48,
+                    color: Color(0xFF2563EB),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.email_outlined,
-                  size: 48,
-                  color: Color(0xFF2563EB),
-                ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Title
-              Text(
-                'Check your email',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
+                // Title
+                Text(
+                  'Check your email',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'We sent a verification code to',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                const SizedBox(height: 8),
+                Text(
+                  'We sent a verification code to',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                  ),
                 ),
-              ),
-              Text(
-                widget.email,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : Colors.black,
+                Text(
+                  widget.email,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              // OTP Input
-              TextField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  letterSpacing: 8,
-                ),
-                decoration: InputDecoration(
-                  hintText: '000000',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.white38 : Colors.grey[400],
+                // OTP Input
+                TextField(
+                  controller: _otpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
                     letterSpacing: 8,
                   ),
-                  filled: true,
-                  fillColor: isDarkMode
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  counterText: '',
-                ),
-                onChanged: (value) {
-                  if (value.length == 6) {
-                    _verifyOTP();
-                  }
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Verify Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _verifyOTP,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    disabledBackgroundColor: Colors.grey,
-                    shape: RoundedRectangleBorder(
+                  decoration: InputDecoration(
+                    hintText: '000000',
+                    hintStyle: TextStyle(
+                      color: isDarkMode ? Colors.white38 : Colors.grey[400],
+                      letterSpacing: 8,
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.grey[100],
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
+                    counterText: '',
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'Verify',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                  onChanged: (value) {
+                    if (value.length == 6) {
+                      _verifyOTP();
+                    }
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-              // Resend Code
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Didn't receive the code? ",
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white70 : Colors.grey[600],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _canResend ? _resendOTP : null,
-                    child: Text(
-                      _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
-                      style: TextStyle(
-                        color: _canResend
-                            ? const Color(0xFF2563EB)
-                            : Colors.grey,
-                        fontWeight: FontWeight.bold,
+                // Verify Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _verifyOTP,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      disabledBackgroundColor: Colors.grey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Verify',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 16),
+
+                // Resend Code
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Didn't receive the code? ",
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _canResend ? _resendOTP : null,
+                      child: Text(
+                        _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
+                        style: TextStyle(
+                          color: _canResend
+                              ? const Color(0xFF2563EB)
+                              : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 0),
+              const SizedBox(height: 20),
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
@@ -93,8 +93,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(_pages[index]["image"]!, height: 310),
-                        const SizedBox(height: 50),
+                        Flexible(
+                          child: Image.asset(
+                            _pages[index]["image"]!,
+                            height: 280,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
                         Text(
                           _pages[index]["title"]!,
                           style: const TextStyle(
@@ -104,19 +110,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          _pages[index]["subtitle"]!,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            _pages[index]["subtitle"]!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     );
                   },
                 ),
               ),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_pages.length, (index) {
@@ -134,7 +144,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   );
                 }),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -156,7 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
             ],
           ),
         ),
