@@ -1,5 +1,14 @@
-# BudgetBlud 💸
-
+# BudgetBlud 💸 
+```markdown
+![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
+![Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/Platform-iOS-000000?logo=apple&logoColor=white)
+![Group Project](https://img.shields.io/badge/Type-Group_school_project-lightgrey)
+[![Made with AI](https://img.shields.io/badge/Made_with-AI_assistance-blue)](#ai-credits)
+```
+ 
 BudgetBlud is a Flutter budgeting application developed as a **group school project**. It helps users organize their finances with budgeting tools and Supabase-backed data synchronization.
 
 > **Project context:** Academic group project. My contributions focused on the Flutter frontend and Supabase integration. The app was developed collaboratively, so this README distinguishes my contributions from the project's overall functionality.
@@ -36,6 +45,19 @@ The overall application was built collaboratively with my teammates.
 | Backend and data services | Supabase |
 | Source control | Git, GitHub |
 
+```markdown
+## Platform and Languages
+ 
+| | |
+| --- | --- |
+| **Language** | Dart (all application code is in `lib/`) |
+| **Framework** | Flutter, Dart SDK `^3.8.1` |
+| **Target platforms** | **Android** and **iOS** mobile devices. The repository contains both Android and iOS projects (iOS deployment target 12.0), with launcher icons configured for both. |
+| **Other Flutter folders** | `web/`, `windows/`, `linux/`, and `macos/` are default Flutter scaffolding and are not a target of this project. |
+```
+ 
+---
+
 ## Screenshots
 
 Screenshots make it easier to understand the interface without running the application. Add screenshots from the current project to a `screenshots/` folder, then embed them below.
@@ -53,6 +75,18 @@ Example Markdown once a screenshot exists in the repository:
 ```
 
 Only keep image links for screenshots that you have actually added.
+
+```markdown
+## Possible Future Improvements
+ 
+- **Safer configuration:** move the Supabase URL and anon key out of source code (for example with `--dart-define`) and confirm Row Level Security is enabled on every table.
+- **Recurring expenses and bill reminders:** automatic monthly entries for rent, subscriptions, and bills.
+- **Savings goals:** targets with progress tracking.
+- **More currencies and date ranges:** currency selection and custom report periods.
+- **Spending insights:** month-over-month comparison and over-budget alerts per category.
+- **Data backup:** import from CSV in addition to the existing export.
+- **Quality:** add widget and provider tests and run `flutter analyze` in a GitHub Actions workflow.
+```
 
 ## Run Locally
 
@@ -114,3 +148,13 @@ Through this group project, I gained experience contributing to a Flutter applic
 Developed collaboratively as a school project at **Holy Angel University**.
 
 This project demonstrates my experience with mobile application development and backend-service integration in a team environment. My individual contributions were focused on the Flutter frontend and Supabase integration.
+
+```markdown
+## AI Credits
+ 
+AI tools were used to help with parts of this project and to draft this README.
+ 
+<!-- Edit to name the tools and what they were used for. -->
+```
+ 
+---
