@@ -126,12 +126,6 @@ Developed collaboratively as a school project at **Holy Angel University**.
 
 This project demonstrates my experience with mobile application development and backend-service integration in a team environment. My individual contributions were focused on the Flutter frontend and Supabase integration.
 
-```markdown
 ## AI Credits
  
 AI tools were used to help with parts of this project and to draft this README.
- 
-<!-- Edit to name the tools and what they were used for. -->
-```
- 
----
