@@ -54,25 +54,6 @@ The overall application was built collaboratively with my teammates.
 | **Other Flutter folders** | `web/`, `windows/`, `linux/`, and `macos/` are default Flutter scaffolding and are not a target of this project. |
  
 
-## Screenshots
-
-Screenshots make it easier to understand the interface without running the application. Add screenshots from the current project to a `screenshots/` folder, then embed them below.
-
-Suggested screenshots:
-- Main dashboard or home screen
-- Budget or expense-management screen
-- Transaction entry or details screen
-- Supabase-backed data displayed in the app
-
-Example Markdown once a screenshot exists in the repository:
-
-```markdown
-![BudgetBlud dashboard](screenshots/dashboard.png)
-```
-
-Only keep image links for screenshots that you have actually added.
-
-```markdown
 ## Possible Future Improvements
  
 - **Safer configuration:** move the Supabase URL and anon key out of source code (for example with `--dart-define`) and confirm Row Level Security is enabled on every table.
