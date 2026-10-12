@@ -93,7 +93,7 @@ The overall application was built collaboratively with my teammates.
  
 <details>
 <summary>Supabase schema</summary>
-```sql
+sql
 CREATE TABLE budgets (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -119,8 +119,10 @@ CREATE TABLE expenses (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-```
+
+
 </details>
+
 ## Possible Future Improvements
  
 - **Safer configuration:** move the Supabase URL and anon key out of source code (for example with `--dart-define`) and confirm Row Level Security is enabled on every table.
