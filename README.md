@@ -1,5 +1,5 @@
 # BudgetBlud 💸 
-```markdown
+
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
@@ -7,7 +7,6 @@
 ![iOS](https://img.shields.io/badge/Platform-iOS-000000?logo=apple&logoColor=white)
 ![Group Project](https://img.shields.io/badge/Type-Group_school_project-lightgrey)
 [![Made with AI](https://img.shields.io/badge/Made_with-AI_assistance-blue)](#ai-credits)
-```
  
 BudgetBlud is a Flutter budgeting application developed as a **group school project**. It helps users organize their finances with budgeting tools and Supabase-backed data synchronization.
 
@@ -45,7 +44,6 @@ The overall application was built collaboratively with my teammates.
 | Backend and data services | Supabase |
 | Source control | Git, GitHub |
 
-```markdown
 ## Platform and Languages
  
 | | |
@@ -54,9 +52,7 @@ The overall application was built collaboratively with my teammates.
 | **Framework** | Flutter, Dart SDK `^3.8.1` |
 | **Target platforms** | **Android** and **iOS** mobile devices. The repository contains both Android and iOS projects (iOS deployment target 12.0), with launcher icons configured for both. |
 | **Other Flutter folders** | `web/`, `windows/`, `linux/`, and `macos/` are default Flutter scaffolding and are not a target of this project. |
-```
  
----
 
 ## Screenshots
 
