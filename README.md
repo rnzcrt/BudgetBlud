@@ -17,14 +17,15 @@ BudgetBlud is a Flutter budgeting application developed as a **group school proj
 BudgetBlud is designed to help users track and manage their budgets through a mobile interface. The project combines a Flutter/Dart frontend with Supabase services for backend functionality and data synchronization.
 
 ## Features
-
-The project README describes the following functionality. Confirm each feature against the current app before presenting it as complete:
-
-- Budgeting and expense-management workflows
-- Flutter-based mobile interface
-- Supabase integration and data synchronization
-
-Add more specific features here only if they are implemented in the current version, such as transaction categories, spending summaries, budget limits, or account management.
+ 
+- **Authentication:** email sign-up and login with OTP verification (Supabase Auth)
+- **Budgets:** a monthly budget plus limits for Foods, Transportation, Shopping, and Bills
+- **Expenses:** add, edit, and delete expenses with predefined or custom categories
+- **Offline-first sync:** data is stored locally and synced to Supabase automatically when the device reconnects
+- **Reports:** category breakdown charts, with CSV and PDF export
+- **Localization:** English, Tagalog, and Spanish
+- **Theming:** light and dark mode
+- **Notifications:** monthly budget reminders and alerts
 
 ## My Contributions
 
@@ -63,7 +64,6 @@ The overall application was built collaboratively with my teammates.
 - **Spending insights:** month-over-month comparison and over-budget alerts per category.
 - **Data backup:** import from CSV in addition to the existing export.
 - **Quality:** add widget and provider tests and run `flutter analyze` in a GitHub Actions workflow.
-```
 
 ## Run Locally
 
@@ -75,31 +75,61 @@ The overall application was built collaboratively with my teammates.
 - Android Studio, VS Code, or another Flutter-supported development environment
 
 ### Setup
-
-1. Clone the repository:
-
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-
-2. Install dependencies:
-
-   ```bash
+ 
+1. Clone the repository and install dependencies:
+```bash
+   git clone https://github.com/rnzcrt/BudgetBlud.git
+   cd BudgetBlud
    flutter pub get
-   ```
-
-3. Configure the Supabase URL and public client key using the configuration approach expected by this project. Check the source code for the exact configuration fields before running it.
-
-   **Security:** Never commit Supabase service-role keys, passwords, access tokens, or other secrets. A client-side application should use only the appropriate public client configuration and rely on correctly configured Supabase Row Level Security (RLS) policies to protect data.
-
-4. Run the application on a supported emulator or device:
-
-   ```bash
+```
+ 
+2. In your Supabase project, create the `budgets` and `expenses` tables (schema below), enable **Row Level Security** on both, and add policies so users can only read and write their own rows (`auth.uid() = user_id`).
+3. Set your own Supabase project URL and **anon** key in `lib/services/supabase_service.dart`.
+   **Security:** never commit a Supabase `service_role` key, passwords, or access tokens. The anon key is designed to be used in client apps, but it is only safe when Row Level Security is correctly configured on every table.
+4. Run the app:
+```bash
    flutter run
-   ```
-
-> Setup may require additional project-specific configuration. Update these instructions with the exact steps and filenames after verifying them on a clean checkout.
+```
+ 
+<details>
+<summary>Supabase schema</summary>
+```sql
+CREATE TABLE budgets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  month INTEGER NOT NULL,
+  year INTEGER NOT NULL,
+  total_budget DECIMAL(10,2) NOT NULL DEFAULT 0,
+  foods_limit DECIMAL(10,2) NOT NULL DEFAULT 0,
+  transportation_limit DECIMAL(10,2) NOT NULL DEFAULT 0,
+  shopping_limit DECIMAL(10,2) NOT NULL DEFAULT 0,
+  bills_limit DECIMAL(10,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, month, year)
+);
+ 
+CREATE TABLE expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount DECIMAL(10,2) NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT,
+  date DATE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+</details>
+## Possible Future Improvements
+ 
+- **Safer configuration:** move the Supabase URL and anon key out of source code (for example with `--dart-define`) and confirm Row Level Security is enabled on every table.
+- **Recurring expenses and bill reminders:** automatic monthly entries for rent, subscriptions, and bills.
+- **Savings goals:** targets with progress tracking.
+- **More currencies and date ranges:** currency selection and custom report periods.
+- **Spending insights:** month-over-month comparison and over-budget alerts per category.
+- **Data backup:** import from CSV in addition to the existing export.
+- **Quality:** add widget and provider tests and run `flutter analyze` in a GitHub Actions workflow.
 
 ## Validation
 
