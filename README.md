@@ -158,6 +158,16 @@ Developed collaboratively as a school project at **Holy Angel University**.
 
 This project demonstrates my experience with mobile application development and backend-service integration in a team environment. My individual contributions were focused on the Flutter frontend and Supabase integration.
 
+## Team
+
+Group project at Holy Angel University.
+
+- [Ranz Emmanuel Cuarto](https://github.com/rnzcrt)
+- [Mark Darius David](https://github.com/darsy29)
+- [Rian Cortez](https://github.com/riancrtz)
+- [Ryence Cortez](https://github.com/Ryence07)
+
+
 ## AI Credits
  
 AI tools were used to help with parts of this project and to draft this README.
